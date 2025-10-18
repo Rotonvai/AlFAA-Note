@@ -3,16 +3,591 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> AlFAA Note </title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="notes.png">
+    <title>QuickNotes</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3982/3982361.png" type="image/x-icon">
+    <style>
+        :root {
+            --primary: #5b21b6;
+            --primary-light: #8b5cf6;
+            --secondary: #f59e0b;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 20px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            background-color: var(--card-bg);
+            font-size: 16px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .user-actions button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .user-actions button:hover {
+            color: var(--primary);
+        }
+
+        .note-creator {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .note-creator.expanded {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .note-creator input, .note-creator textarea {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            resize: none;
+        }
+
+        .note-creator input {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .note-creator.expanded input {
+            display: block;
+        }
+
+        .note-creator input:focus, .note-creator textarea:focus {
+            outline: none;
+        }
+
+        .note-creator textarea {
+            min-height: 40px;
+            max-height: 300px;
+        }
+
+        .note-creator .placeholder {
+            color: var(--text-light);
+        }
+
+        .note-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .note-creator.expanded .note-actions {
+            display: flex;
+        }
+
+        .note-tools {
+            display: flex;
+            gap: 15px;
+        }
+
+        .note-tools button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .note-tools button:hover {
+            color: var(--primary);
+        }
+
+        .note-actions .add-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .note-actions .add-btn:hover {
+            background-color: var(--primary-light);
+        }
+
+        .notes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .note-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .note-card.pinned::before {
+            content: "📌";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 14px;
+        }
+
+        .note-card h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .note-card p {
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .note-card .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-light);
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        .note-card .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .note-card .note-actions button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .note-card .note-actions button:hover {
+            color: var(--primary);
+        }
+
+        .color-palette {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.2);
+        }
+
+        .color-option.selected {
+            border-color: var(--text);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .empty-state p {
+            max-width: 500px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+
+        .empty-state button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .empty-state button:hover {
+            background-color: var(--primary-light);
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-bar {
+                max-width: 100%;
+                margin: 10px 0;
+            }
+            
+            .notes-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1><img src="notes.png"> AlFAA Note </h1>
-        <button class="btn"><img src="edit.png"> Create Notes </button>
-        <div class="notes-container"></div>
+        <header>
+            <div class="logo">
+                <!-- <div class="logo-icon">QN</div> -->
+                <div class="logo-text"><i class="fa-solid fa-notes-medical"></i>QuickNotes</div>
+            </div>
+            <!-- <div class="search-bar">
+                <div class="search-icon"><i class="fa-thin fa-magnifying-glass"></i></div>
+                <input type="text" placeholder="Search your notes...">
+            </div>
+            <div class="user-actions">
+                <button title="Settings">⚙️</button>
+                <button title="Profile">👤</button>
+            </div> -->
+        </header>
+
+        <div class="note-creator">
+            <input type="text" placeholder="Title">
+            <textarea placeholder="Take a note..." rows="1"></textarea>
+            <div class="note-actions">
+                <div class="note-tools">
+                    <button title="Change Color">🎨</button>
+                    <button title="Add Image">🖼️</button>
+                    <button title="Add Drawing">✏️</button>
+                    <button title="Pin Note">📌</button>
+                </div>
+                <button class="add-btn">Add Note</button>
+            </div>
+        </div>
+
+        <div class="notes-container">
+            <!-- Notes will be dynamically added here -->
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const noteCreator = document.querySelector('.note-creator');
+            const noteTitleInput = noteCreator.querySelector('input');
+            const noteContentInput = noteCreator.querySelector('textarea');
+            const addNoteBtn = noteCreator.querySelector('.add-btn');
+            const notesContainer = document.querySelector('.notes-container');
+            
+            // Sample notes data
+            let notes = JSON.parse(localStorage.getItem('quicknotes')) || [
+                // {
+                //     id: 1,
+                //     title: 'Welcome to QuickNotes',
+                //     content: 'This is your first note. Click on "Take a note..." to create a new note.',
+                //     color: '#ffffff',
+                //     pinned: true,
+                //     date: new Date().toLocaleDateString()
+                // },
+                // {
+                //     id: 2,
+                //     title: 'Shopping List',
+                //     content: '- Milk\n- Eggs\n- Bread\n- Fruits',
+                //     color: '#fef3c7',
+                //     pinned: false,
+                //     date: new Date().toLocaleDateString()
+                // },
+                // {
+                //     id: 3,
+                //     title: 'Project Ideas',
+                //     content: '1. Weather app with location-based alerts\n2. Budget tracker with visualizations\n3. Recipe organizer with shopping list',
+                //     color: '#dbeafe',
+                //     pinned: false,
+                //     date: new Date().toLocaleDateString()
+                // }
+            ];
+
+            // Initialize the app
+            renderNotes();
+
+            // Expand note creator when clicking on textarea
+            noteContentInput.addEventListener('click', function() {
+                noteCreator.classList.add('expanded');
+                noteContentInput.focus();
+            });
+
+            // Add new note
+            addNoteBtn.addEventListener('click', function() {
+                const title = noteTitleInput.value.trim();
+                const content = noteContentInput.value.trim();
+                
+                if (content) {
+                    const newNote = {
+                        id: Date.now(),
+                        title: title,
+                        content: content,
+                        color: '#ffffff',
+                        pinned: false,
+                        date: new Date().toLocaleDateString()
+                    };
+                    
+                    notes.unshift(newNote);
+                    saveNotes();
+                    renderNotes();
+                    
+                    // Reset form
+                    noteTitleInput.value = '';
+                    noteContentInput.value = '';
+                    noteCreator.classList.remove('expanded');
+                }
+            });
+
+            // Close note creator when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!noteCreator.contains(e.target) && 
+                    noteContentInput.value.trim() === '' && 
+                    noteTitleInput.value.trim() === '') {
+                    noteCreator.classList.remove('expanded');
+                }
+            });
+
+            // Render notes to the DOM
+            function renderNotes() {
+                notesContainer.innerHTML = '';
+                
+                if (notes.length === 0) {
+                    notesContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h3>No notes yet</h3>
+                            <p>Create your first note by clicking on "Take a note..." above</p>
+                            <button id="create-first-note">Create Note</button>
+                        </div>
+                    `;
+                    
+                    document.getElementById('create-first-note').addEventListener('click', function() {
+                        noteCreator.classList.add('expanded');
+                        noteContentInput.focus();
+                    });
+                    
+                    return;
+                }
+                
+                // Separate pinned and unpinned notes
+                const pinnedNotes = notes.filter(note => note.pinned);
+                const unpinnedNotes = notes.filter(note => !note.pinned);
+                
+                // Render pinned notes first
+                pinnedNotes.forEach(note => {
+                    const noteElement = createNoteElement(note);
+                    notesContainer.appendChild(noteElement);
+                });
+                
+                // Then render unpinned notes
+                unpinnedNotes.forEach(note => {
+                    const noteElement = createNoteElement(note);
+                    notesContainer.appendChild(noteElement);
+                });
+            }
+
+            // Create note element
+            function createNoteElement(note) {
+                const noteElement = document.createElement('div');
+                noteElement.className = 'note-card';
+                if (note.pinned) noteElement.classList.add('pinned');
+                noteElement.style.backgroundColor = note.color;
+                
+                noteElement.innerHTML = `
+                    ${note.title ? `<h3>${note.title}</h3>` : ''}
+                    <p>${note.content}</p>
+                    <div class="note-footer">
+                        <span>${note.date}</span>
+                        <div class="note-actions">
+                            <button class="pin-btn" title="${note.pinned ? 'Unpin' : 'Pin'}">📌</button>
+                            <button class="delete-btn" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add event listeners
+                noteElement.querySelector('.pin-btn').addEventListener('click', function() {
+                    togglePinNote(note.id);
+                });
+                
+                noteElement.querySelector('.delete-btn').addEventListener('click', function() {
+                    deleteNote(note.id);
+                });
+                
+                // Double click to edit
+                noteElement.addEventListener('dblclick', function() {
+                    editNote(note.id);
+                });
+                
+                return noteElement;
+            }
+
+            // Toggle pin status
+            function togglePinNote(id) {
+                notes = notes.map(note => {
+                    if (note.id === id) {
+                        return { ...note, pinned: !note.pinned };
+                    }
+                    return note;
+                });
+                
+                saveNotes();
+                renderNotes();
+            }
+
+            // Delete note
+            function deleteNote(id) {
+                if (confirm('Are you sure you want to delete this note?')) {
+                    notes = notes.filter(note => note.id !== id);
+                    saveNotes();
+                    renderNotes();
+                }
+            }
+
+            // Edit note (simplified for this example)
+            function editNote(id) {
+                const note = notes.find(note => note.id === id);
+                if (note) {
+                    noteTitleInput.value = note.title || '';
+                    noteContentInput.value = note.content;
+                    noteCreator.classList.add('expanded');
+                    noteContentInput.focus();
+                    
+                    // Remove the old note
+                    notes = notes.filter(note => note.id !== id);
+                    saveNotes();
+                    renderNotes();
+                }
+            }
+
+            // Save notes to localStorage
+            function saveNotes() {
+                localStorage.setItem('quicknotes', JSON.stringify(notes));
+            }
+        });
+    </script>
 </body>
 </html>
